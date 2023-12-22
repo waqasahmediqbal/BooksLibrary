@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useState,useEffect} from "react";
 import {
   IconButton,
   Input,
@@ -7,16 +7,33 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
-export function SearchBar(props) {
-  // Pass the computed styles into the `__css` prop
-  const { variant, background, children, placeholder, borderRadius, ...rest } =
-    props;
+const SearchBar = (props) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const handleSearch = async () => {
+    try {
+      // Fetch data from the Google Books API
+      const response = await fetch(
+        `https://www.googleapis.com/books/v1/volumes?q=${searchTerm}`
+      );
+      const data = await response.json();
+      sessionStorage.setItem('searchResults', JSON.stringify(data.items || []));
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+    if (!searchTerm.trim()) {
+      // Clear search results from sessionStorage
+      sessionStorage.removeItem('searchResults');
+    }
+
+  
+  const { variant, background, children, placeholder, borderRadius, ...rest } = props;
   // Chakra Color Mode
   const searchIconColor = useColorModeValue("gray.700", "white");
   const inputBg = useColorModeValue("secondaryGray.300", "navy.900");
   const inputText = useColorModeValue("gray.700", "gray.100");
   return (
-    <InputGroup w={{ base: "100%", md: "200px" }} {...rest}>
+    <InputGroup w={{ base: "100%", md: "300px" }} {...rest}>
       <InputLeftElement
         children={
           <IconButton
@@ -37,15 +54,22 @@ export function SearchBar(props) {
         }
       />
       <Input
-        variant='search'
-        fontSize='sm'
+        variant="search"
+        fontSize="sm"
         bg={background ? background : inputBg}
         color={inputText}
-        fontWeight='500'
+        fontWeight="500"
         _placeholder={{ color: "gray.400", fontSize: "14px" }}
         borderRadius={borderRadius ? borderRadius : "30px"}
-        placeholder={placeholder ? placeholder : "Search..."}
+        placeholder="Search books..."
+        value={searchTerm}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          handleSearch(); // Trigger search on each input change
+        }}
       />
     </InputGroup>
   );
 }
+
+export default SearchBar;
